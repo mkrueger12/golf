@@ -34,6 +34,9 @@ players = pd.DataFrame(df['plrs'])
 #player stats
 #https://statdata.pgatour.com/r/521/2022/player_stats.json?userTrackingId=eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2NjQzODY1NDAsIm5iZiI6MTY2NDM4NjU0MCwiZXhwIjoxNjY0Mzg4MzQwfQ.GQA5_XVCkiY_G4C_CPTdGg8eIsWpsIGeFLWFHZ7xVh0
 
+# shot data
+#https://statdata.pgatour.com/r/521/2022/scorecards/28237.json?userTrackingId=eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2NjQ0MTMzMTEsIm5iZiI6MTY2NDQxMzMxMSwiZXhwIjoxNjY0NDE1MTExfQ.AxpCVHEnoaWCtUr8yveE5Jg3uI-2Reb_nUvhvk4_ueg
+
 #get userKey
 
 desired_capabilities = DesiredCapabilities.CHROME
@@ -64,7 +67,8 @@ driver.get('https://www.pgatour.com/players/player.28237.rory-mcilroy.html/score
 logs = driver.get_log("performance")
 log = json.loads(logs[0]['message'])
 type = log['message']['params']['type']
-userKey = log.split('userKey":"')[1].split('"')[0]
+userKey = log['message']['params']['request']['url'].split('&')[3]
+userKey = userKey.replace('userTrackingId=', '')
 
 
 
@@ -88,7 +92,7 @@ rnds = []
 
 for i in range(0,1000):
     i = str(i).zfill(3)
-    url = f'https://statdata.pgatour.com/r/{i}/2022/player_stats.json?userTrackingId=eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2NjQzODY1NDAsIm5iZiI6MTY2NDM4NjU0MCwiZXhwIjoxNjY0Mzg4MzQwfQ.GQA5_XVCkiY_G4C_CPTdGg8eIsWpsIGeFLWFHZ7xVh0'
+    url = f'https://statdata.pgatour.com/r/{i}/2022/player_stats.json?userTrackingId=eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2NjQ0MTA4MTIsIm5iZiI6MTY2NDQxMDgxMiwiZXhwIjoxNjY0NDEyNjEyfQ.zeLAzOuhL0NapJ_1GafwjaXS4sfSZaxlub49aF1-_uM'
     response = requests.get(url).status_code
     if response == 200:
         print(i, response)
@@ -96,3 +100,6 @@ for i in range(0,1000):
         rnds.append(data)
     else:
         pass
+
+rnds = pd.DataFrame(rnds)
+rnds.to_csv('golf/data/external/pga_tour_tournaments.csv')
