@@ -50,10 +50,17 @@ def get_user_key():
         if (type == 'XHR') & (log['message']['method'] == 'Network.requestWillBeSent'):
             if len(log['message']['params']['request']['url']) > 75:
 
-                userKey = log['message']['params']['request']['url'].split('&')[3]
-                userKey = userKey.replace('userTrackingId=', '')
-                print('userkey found')
+                print(log['message']['params']['request']['url'])
 
-                driver.quit()
+                try:
+                    userKey = log['message']['params']['request']['url'].split('&')[3]
 
-                return userKey
+                    userKey = userKey.replace('userTrackingId=', '')
+                    print('userkey found')
+
+                    driver.quit()
+
+                    return userKey
+                except IndexError:
+                    print('IndexError')
+                    continue

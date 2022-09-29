@@ -23,7 +23,37 @@ players = list(players['pid'].unique())
 
 # read in tournament data
 tournaments = pd.read_csv('tournaments.csv')
-tournaments = tournaments['tournament']
+tournaments = list(tournaments['tournament'])
 
-a = get_user_key()
+# get shot data
+for y in range(2018, 2023):
+    id = get_user_key()
+
+    for t in tournaments:
+        data = []
+        t = str(t).zfill(3)
+
+        for p in players:
+            url = f'https://statdata.pgatour.com/r/{t}/{y}/scorecards/{p}.json?userTrackingId={id}'
+            print(requests.get(url).status_code, url)
+
+            if requests.get(url).status_code == 200:
+
+                r = requests.get(url).content
+                r = json.loads(r)
+
+                for i in range(len(r['p']['rnds'])):
+                    df = pd.json_normalize(r['p']['rnds'][0], ['holes', ['shots']], max_level=1)
+
+                    df['round'] = i + 1
+                    df['tournament'] = t
+                    df['year'] = y
+
+                    data.append(df)
+
+        data = pd.concat(data)
+        data.to_csv(f'golf/data/interim/data/{y}_{t}.csv', index=False)
+
+
+
 
