@@ -60,6 +60,8 @@ def get_user_key():
 
                     driver.quit()
 
+                    print('driver quit')
+
                     return userKey
                 except IndexError:
                     print('IndexError')

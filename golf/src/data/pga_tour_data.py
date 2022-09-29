@@ -1,10 +1,9 @@
 import requests
 import pandas as pd
 from golf.src.functions import get_user_key
-import time
+
 import json
-from selenium import webdriver
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+
 
 # get players table
 url = 'https://statdata.pgatour.com/players/player.json?userTrackingId=eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2NjQxNDIxOTEsIm5iZiI6MTY2NDE0MjE5MSwiZXhwIjoxNjY0MTQzOTkxfQ.tiBDggyR7nuPki_ZcexFhMD-AKZZy7friUqI_ZS8zpQ'
@@ -17,7 +16,7 @@ players = players.explode('playedYrs').reset_index(drop=True) #explode playedYrs
 
 players['playedYrs'] = players['playedYrs'].astype(int) #convert playedYrs to int
 
-players = players[players['playedYrs'] > 2017] #filter for players who have played since 2018
+#players = players[players['playedYrs'] > 2017] #filter for players who have played since 2018
 
 players = list(players['pid'].unique())
 
@@ -25,34 +24,25 @@ players = list(players['pid'].unique())
 tournaments = pd.read_csv('tournaments.csv')
 tournaments = list(tournaments['tournament'])
 
-# get shot data
-for y in range(2018, 2023):
-    id = get_user_key()
+# get player history
+id = get_user_key()
+data = []
 
-    for t in tournaments:
-        data = []
-        t = str(t).zfill(3)
+for p in players:
 
-        for p in players:
-            url = f'https://statdata.pgatour.com/r/{t}/{y}/scorecards/{p}.json?userTrackingId={id}'
-            print(requests.get(url).status_code, url)
+    url = f'https://statdata-api-prod.pgatour.com/api/clientfile/PlayerTournamentHistoryRef?P_ID={p}&format=json&userTrackingId={id}'
+    print(p, requests.get(url).status_code, url)
+    r = requests.get(url).content
+    r = json.loads(r)
 
-            if requests.get(url).status_code == 200:
+    df = pd.DataFrame(r)
+    df = pd.json_normalize(r['years'],  'tournaments',  ['year'])
+    df['pid'] = p
+    data.append(df)
 
-                r = requests.get(url).content
-                r = json.loads(r)
+data = pd.concat(data)
+data.to_csv('golf/data/interim/player_history.csv', index=False)
 
-                for i in range(len(r['p']['rnds'])):
-                    df = pd.json_normalize(r['p']['rnds'][0], ['holes', ['shots']], max_level=1)
-
-                    df['round'] = i + 1
-                    df['tournament'] = t
-                    df['year'] = y
-
-                    data.append(df)
-
-        data = pd.concat(data)
-        data.to_csv(f'golf/data/interim/data/{y}_{t}.csv', index=False)
 
 
 
