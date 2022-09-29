@@ -1,9 +1,9 @@
-import requests
-import pandas as pd
-from golf.src.functions import get_user_key
-
 import json
 
+import pandas as pd
+import requests
+
+from golf.src.functions import get_user_key
 
 # get players table
 url = 'https://statdata.pgatour.com/players/player.json?userTrackingId=eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2NjQxNDIxOTEsIm5iZiI6MTY2NDE0MjE5MSwiZXhwIjoxNjY0MTQzOTkxfQ.tiBDggyR7nuPki_ZcexFhMD-AKZZy7friUqI_ZS8zpQ'
@@ -16,7 +16,7 @@ players = players.explode('playedYrs').reset_index(drop=True) #explode playedYrs
 
 players['playedYrs'] = players['playedYrs'].astype(int) #convert playedYrs to int
 
-#players = players[players['playedYrs'] > 2017] #filter for players who have played since 2018
+players = players[players['playedYrs'] > 2012] #filter for players who have played since 2018
 
 players = list(players['pid'].unique())
 
